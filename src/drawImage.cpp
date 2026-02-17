@@ -1,5 +1,5 @@
 #include "drawImage.h"
-
+// Hola
 DrawImage::DrawImage(const Image& img, const Color* pixels, Framebuffer& fb, int& posX, int& posY, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees)
   : degrees(degrees),
     scaleX(scaleX),
