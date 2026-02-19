@@ -1,11 +1,10 @@
 #include "drawImage.h"
-using namespace std;
 // FRAMEBUFFER SIZE
 static constexpr int windowWidth = 1800;
 static constexpr int windowHeight = 900;
 // IMAGE VARIABLES
-int posX = 0;
-int posY = 0;
+int posX = 200;
+int posY = 200;
 int velocity = 6;
 int reverseImage = 0;
 float scaledImageX = 1.0f;
@@ -49,7 +48,7 @@ int main(){
         if (degrees > 360.0f) degrees = 0.0f;
         if (IsKeyDown(KEY_M) || IsKeyDown(KEY_N)) {
             degrees += IsKeyDown(KEY_M) ? 1.0f : -1.0f;
-            image.rotate();
+            //image.rotate();
         }
         // IMAGE MOVEMENT
         if (IsKeyDown(KEY_D)) posX += velocity;
@@ -65,7 +64,8 @@ int main(){
         }
         // DRAWING IMAGE IN SCREEN
         framebuffer.clear(Color{50, 50, 50, 255});
-        image.showImage();
+        //image.showImage();
+        image.showImage2();
         UpdateTexture(tex, framebuffer.pix.data());
         BeginDrawing();
         ClearBackground(Color{50, 50, 50, 255});
