@@ -31,11 +31,8 @@ struct DrawImage {
 
   DrawImage(const Image& img, const Color* pixels, Framebuffer& fb, int& posX, int& posY, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees);
   void cutImage();
-  void showImage();
   void scaleImage();
+  void buildMatrix();
+  void showImage();
   void rotate();
-
-  // CHANGES
-  void cutImage2();
-  void showImage2();
 };

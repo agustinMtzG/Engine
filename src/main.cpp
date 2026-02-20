@@ -5,10 +5,10 @@ static constexpr int windowHeight = 900;
 // IMAGE VARIABLES
 int posX = 200;
 int posY = 200;
-int velocity = 6;
+int velocity = 12;
 int reverseImage = 0;
-float scaledImageX = 1.0f;
-float scaledImageY = 1.0f;
+float scaledImageX = 0.5f;
+float scaledImageY = 0.5f;
 float degrees = 0.0f;
 bool boxMargin = false;
 
@@ -64,8 +64,7 @@ int main(){
         }
         // DRAWING IMAGE IN SCREEN
         framebuffer.clear(Color{50, 50, 50, 255});
-        //image.showImage();
-        image.showImage2();
+        image.showImage();
         UpdateTexture(tex, framebuffer.pix.data());
         BeginDrawing();
         ClearBackground(Color{50, 50, 50, 255});
