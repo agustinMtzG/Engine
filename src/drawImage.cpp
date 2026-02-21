@@ -138,6 +138,113 @@ void DrawImage::scaleImage() {
   height = newHeight;
 }
 
+void DrawImage::rotate(){
+  float rad = degrees * 3.14159265f / 180.0f;
+  float cosA = cos(rad);
+  float sinA = sin(rad);
+  int srcW = newWidth;
+  int srcH = newHeight;
+  float cx = (srcW - 1) * 0.5f;
+  float cy = (srcH - 1) * 0.5f;
+  vector<Color> rotated(srcW * srcH, Color{0,0,0,0});
+  for(int y = 0; y < srcH; y++){
+    for(int x = 0; x < srcW; x++){
+      float dx = x - cx;
+      float dy = y - cy;
+      float srcX = cosA * dx + sinA * dy + cx;
+      float srcy = -sinA * dx + cosA * dy + cy;
+      int ix = (int)floor(srcX);
+      int iy = (int)floor(srcy);
+      if(ix >= 0 && ix < srcW && iy >= 0 && iy < srcH){
+        rotated[(size_t)y * (size_t)srcW + (size_t)x] = newImage2[(size_t)iy * (size_t)srcW + (size_t)ix];
+      }
+    }
+  }
+  newImage = move(rotated);
+}
+
+void DrawImage::buildMatrix(){
+  int n1 = 0;
+  int n2 = 0;
+  bool b1 = true;
+  bool b2 = true;
+  if(Real.size() != 0){
+    Real.clear();
+    Fake.clear();
+    Group.clear();
+    smallImage.clear();
+  }
+  for(int y = 0; y < newHeight; y++){
+    for(int x = 0; x < newWidth; x++){
+      if(imgPixels[(size_t)y * newWidth + x].a != 0){
+        smallImage.push_back(imgPixels[(size_t)y * newWidth + x]);
+        // REAL PIXEL FOUND
+        n1++;
+        if(n2 > 0){
+          Fake.push_back(n2);
+          Group.push_back(false);
+          n2 = 0;
+        }
+      }else{
+        // FAKE PIXEL FOUND
+        n2++;
+        if(n1 > 0){
+          Real.push_back(n1);
+          Group.push_back(true);
+          n1 = 0;
+        }
+      }
+    }
+    if(n1 > 0) Real.push_back(n1);
+    if(n1 > 0) Group.push_back(true);
+    if(n2 > 0) Fake.push_back(n2);
+    if(n2 > 0) Group.push_back(false);
+    n1 = 0;
+    n2 = 0;
+  }
+  //56,560 1.0f hidrante
+}
+
+void DrawImage::showImage(){
+  int x = posX;
+  int y = posY;
+  int indexReal = 0;
+  int indexFake = 0;
+  int indexSmallImage = 0;
+  for(int i = 0; i < Group.size(); i++){
+    if(Group[i]){
+      int count = Real[indexReal];
+      memcpy(&fb.pix[(size_t)y * fb.w + x], &smallImage[(size_t)indexSmallImage], (size_t)count * sizeof(Color));
+      x += count;
+      indexSmallImage += count;
+      indexReal++;
+      if(x >= newWidth + posX){
+        x = posX;
+        y++;
+        continue;
+      }
+    }else{
+      x += Fake[indexFake];
+      indexFake++;
+      if(x >= newWidth + posX){
+        x = posX;
+        y++;
+        continue;
+      }
+    }
+  }
+}
+
+
+/*
+  CREAR MI PROPIA FUNCION MEMCPY
+  ESTABLECER LIMITES DE DIBUJO FUERA DEL TAMAÑO DEL FRAMEBUFFER
+  MIRROR/REVERSE IMAGE
+  SOLUCIONAR ROTATE IMAGE
+  OPTIMIZAR
+*/
+
+/*
 void DrawImage::buildMatrix(){
   // BOLEANOS
   bool bool2 = true;
@@ -209,31 +316,6 @@ void DrawImage::buildMatrix(){
   }
 }
 
-void DrawImage::rotate(){
-  float rad = degrees * 3.14159265f / 180.0f;
-  float cosA = cos(rad);
-  float sinA = sin(rad);
-  int srcW = newWidth;
-  int srcH = newHeight;
-  float cx = (srcW - 1) * 0.5f;
-  float cy = (srcH - 1) * 0.5f;
-  vector<Color> rotated(srcW * srcH, Color{0,0,0,0});
-  for(int y = 0; y < srcH; y++){
-    for(int x = 0; x < srcW; x++){
-      float dx = x - cx;
-      float dy = y - cy;
-      float srcX = cosA * dx + sinA * dy + cx;
-      float srcy = -sinA * dx + cosA * dy + cy;
-      int ix = (int)floor(srcX);
-      int iy = (int)floor(srcy);
-      if(ix >= 0 && ix < srcW && iy >= 0 && iy < srcH){
-        rotated[(size_t)y * (size_t)srcW + (size_t)x] = newImage2[(size_t)iy * (size_t)srcW + (size_t)ix];
-      }
-    }
-  }
-  newImage = move(rotated);
-}
-
 void DrawImage::showImage(){
   int indexNumbers = 0;
   int indexFakePixels = 0;
@@ -260,13 +342,4 @@ void DrawImage::showImage(){
     indexRealPixels = 0;
   }
 }
-
-/*
-  CREAR MI PROPIA FUNCION MEMCPY
-  ESTABLECER LIMITES DE DIBUJO FUERA DEL TAMAÑO DEL FRAMEBUFFER
-
-  SOLUCIONAR ROTATE IMAGE
-
-  OPTIMIZAR
-
 */

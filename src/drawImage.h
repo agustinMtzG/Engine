@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include <cstdint>
 using namespace std;
 
 struct DrawImage {
@@ -25,15 +26,21 @@ struct DrawImage {
   vector<Color> newImage;
   vector<Color> basePixels;
   int baseW = 0, baseH = 0;
-  // CUTIMAGE CHANGES
+
+  vector<Color> smallImage;
+  vector<uint16_t> Real;
+  vector<uint16_t> Fake;
+  vector<bool> Group;
+
+  /*
+  // CUTIMAGE CHANGES VECTORS
   vector<vector<int>> numbers;
   vector<vector<int>> realPixels;
   vector<vector<int>> fakePixels;
-  vector<Color> smallImage;
-  // VECTORES
   vector<int> vectorNumbers;
   vector<int> vectorRealPixels;
   vector<int> vectorFakePixels;
+  */
 
   DrawImage(const Image& img, const Color* pixels, Framebuffer& fb, int& posX, int& posY, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees);
   void cutImage();
