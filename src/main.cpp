@@ -55,6 +55,18 @@ int main(){
         if (IsKeyDown(KEY_A)) posX -= velocity;
         if (IsKeyDown(KEY_S)) posY += velocity;
         if (IsKeyDown(KEY_W)) posY -= velocity;
+        // IMAGE SIZE
+        if(IsKeyDown(KEY_O)){
+            scaledImageX += 0.01f;
+            scaledImageY += 0.01f;
+            image.scaleImage();
+            image.buildMatrix();
+        } else if (IsKeyDown(KEY_I)){
+            scaledImageX -= 0.01f;
+            scaledImageY -= 0.01f;
+            image.scaleImage();
+            image.buildMatrix();
+        }
         // TOGGLE IMAGE MARGIN
         if (IsKeyPressed(KEY_SPACE)) boxMargin = !boxMargin;
         // IMAGE FLIPPING

@@ -76,38 +76,44 @@ void DrawImage::cutImage(){
   imgPixels = move(imgPixels2);
   newWidth = arr2[3] - arr2[2];
   newHeight = arr2[1] - arr2[0];
+  basePixels = imgPixels;
+  baseW = newWidth;
+  baseH = newHeight;
 }
 
-void DrawImage::scaleImage(){
-  int oldWidth = newWidth;
-  int oldHeight = newHeight;
-  int scaledWidth = max(1, (int)round(oldWidth * scaleX));
-  int scaledHeight = max(1, (int)round(oldHeight * scaleY));
-  vector<Color> scaled(scaledWidth * scaledHeight);
-  float percentageX = (float)oldWidth / scaledWidth;
-  float percentageY = (float)oldHeight / scaledHeight;
-  for(int newY = 0; newY < scaledHeight; newY++){
-    for(int newX = 0; newX < scaledWidth; newX++){
+void DrawImage::scaleImage() {
+  if (scaleX < 0.05f) scaleX = 0.05f;
+  if (scaleY < 0.05f) scaleY = 0.05f;
+  int oldWidth  = baseW;
+  int oldHeight = baseH;
+  int scaledWidth  = std::max(1, (int)std::round(baseW * scaleX));
+  int scaledHeight = std::max(1, (int)std::round(baseH * scaleY));
+  if (scaledWidth == newWidth && scaledHeight == newHeight) return;
+  std::vector<Color> scaled((size_t)scaledWidth * (size_t)scaledHeight);
+  float percentageX = (float)oldWidth / (float)scaledWidth;
+  float percentageY = (float)oldHeight / (float)scaledHeight;
+  for (int newY = 0; newY < scaledHeight; newY++) {
+    for (int newX = 0; newX < scaledWidth; newX++) {
       float x0 = newX * percentageX;
       float y0 = newY * percentageY;
       float x1 = x0 + percentageX;
       float y1 = y0 + percentageY;
-      int Xx0 = (int)floor(x0);
-      int Yy0 = (int)floor(y0);
-      int Xx1 = (int)ceil(x1);
-      int Yy1 = (int)ceil(y1);
+      int Xx0 = (int)std::floor(x0);
+      int Yy0 = (int)std::floor(y0);
+      int Xx1 = (int)std::ceil(x1);
+      int Yy1 = (int)std::ceil(y1);
       float r = 0, g = 0, b = 0, a = 0;
       float totalArea = 0;
-      for(int y = Yy0; y < Yy1; y++){
-        for(int x = Xx0; x < Xx1; x++){
-          if(x < 0 || x >= oldWidth || y < 0 || y >= oldHeight) continue;
-          float initialX = max(x0, (float)x);
-          float initialY = max(y0, (float)y);
-          float finalX = min(x1, (float)(x + 1));
-          float finalY = min(y1, (float)(y + 1));
+      for (int y = Yy0; y < Yy1; y++) {
+        for (int x = Xx0; x < Xx1; x++) {
+          if (x < 0 || x >= oldWidth || y < 0 || y >= oldHeight) continue;
+          float initialX = std::max(x0, (float)x);
+          float initialY = std::max(y0, (float)y);
+          float finalX   = std::min(x1, (float)(x + 1));
+          float finalY   = std::min(y1, (float)(y + 1));
           float area = (finalX - initialX) * (finalY - initialY);
-          if(area <= 0) continue;
-          Color c = imgPixels[(size_t)y * (size_t)oldWidth + (size_t)x]; // newImage
+          if (area <= 0) continue;
+          Color c = basePixels[(size_t)y * (size_t)oldWidth + (size_t)x];
           r += c.r * area;
           g += c.g * area;
           b += c.b * area;
@@ -116,7 +122,7 @@ void DrawImage::scaleImage(){
         }
       }
       Color out{0, 0, 0, 0};
-      if(totalArea > 0){
+      if (totalArea > 0) {
         out.r = (unsigned char)(r / totalArea);
         out.g = (unsigned char)(g / totalArea);
         out.b = (unsigned char)(b / totalArea);
@@ -133,16 +139,17 @@ void DrawImage::scaleImage(){
 }
 
 void DrawImage::buildMatrix(){
-  // VECTORES
-  std::vector<int> vectorNumbers;
-  std::vector<int> vectorRealPixels;
-  std::vector<int> vectorFakePixels;
   // BOLEANOS
   bool bool2 = true;
   bool bool3 = true;
   // ENTEROS
   int n1 = 0;
   int n2 = 0;
+  // RELEASE MEMORY
+  numbers.clear();
+  realPixels.clear();
+  fakePixels.clear();
+  smallImage.clear();
   // FOR ANIDADO
   for(int y = 0; y < newHeight; y++){
     for(int x = 0; x < newWidth; x++){
@@ -179,10 +186,10 @@ void DrawImage::buildMatrix(){
       vectorFakePixels.push_back(n2);
       n2 = 0;
     }
-    if(vectorRealPixels[0] == newWidth){
+    if(!vectorRealPixels.empty() && vectorRealPixels[0] == newWidth){
       vectorFakePixels.push_back(0);
     }
-    if(vectorFakePixels[0] == newWidth){
+    if(!vectorFakePixels.empty() && vectorFakePixels[0] == newWidth){
       vectorRealPixels.push_back(0);
     }
     bool2 = true;
@@ -256,7 +263,6 @@ void DrawImage::showImage(){
 
 /*
   CREAR MI PROPIA FUNCION MEMCPY
-  ANIMACION CONSTANTE DE CRECIMIENTO DE IMAGEN
   ESTABLECER LIMITES DE DIBUJO FUERA DEL TAMAÑO DEL FRAMEBUFFER
 
   SOLUCIONAR ROTATE IMAGE

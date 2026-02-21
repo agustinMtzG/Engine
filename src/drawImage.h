@@ -14,6 +14,7 @@ struct DrawImage {
   int& posY;
   int posY1 = 0, posY2 = 0, posX1 = 0, posX2 = 0;
   int width = 0, height = 0, newWidth = 0, newHeight = 0;
+  int oldWidth = 0, oldHeight = 0;
   int firstLineX = 0, firstLineY = 0;
   int& n1;
   float& scaleX;
@@ -22,12 +23,17 @@ struct DrawImage {
   vector<Color> newImage2;
   vector<Color> imgPixels;
   vector<Color> newImage;
-
+  vector<Color> basePixels;
+  int baseW = 0, baseH = 0;
   // CUTIMAGE CHANGES
   vector<vector<int>> numbers;
   vector<vector<int>> realPixels;
   vector<vector<int>> fakePixels;
   vector<Color> smallImage;
+  // VECTORES
+  vector<int> vectorNumbers;
+  vector<int> vectorRealPixels;
+  vector<int> vectorFakePixels;
 
   DrawImage(const Image& img, const Color* pixels, Framebuffer& fb, int& posX, int& posY, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees);
   void cutImage();
