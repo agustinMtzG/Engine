@@ -26,7 +26,7 @@ void DrawImage::cutImage(){
   // FOR ARRIBA A ABAJO
   for(int y = 0; y < height; y++){
     for(int x = 0; x < width; x++){
-      if(imgPixels[(size_t)y * width + x].a != 0){
+      if(imgPixels[(size_t)y * width + x].a > 0){
         arr[0] = true;
         arr2[0] = y;
         break;
@@ -37,35 +37,35 @@ void DrawImage::cutImage(){
   // FOR ABAJO A ARRIBA
   for(int y = height - 1; y >= 0; y--){
     for(int x = 0; x < width; x++){
-      if(imgPixels[(size_t)y * width + x].a != 0){
+      if(imgPixels[(size_t)y * width + x].a > 0){
         arr[1] = true;
         arr2[1] = y;
         break;
       }
     }
     if(arr[1]) break;
-    // FOR IZQUIERDA A DERECHA
-    for(int x = 0; x < width; x++){
-      for(int y = 0; y < height; y++){
-        if(imgPixels[(size_t)y * width + x].a != 0){
-          arr[2] = true;
-          arr2[2] = x;
-          break;
-        }
-      }
-      if(arr[2]) break;
+  }
+  // FOR IZQUIERDA A DERECHA
+  for(int x = 0; x < width; x++){
+    for(int y = 0; y < height; y++){
+      if(imgPixels[(size_t)y * width + x].a > 0){
+        arr[2] = true;
+        arr2[2] = x;
+      break;
     }
-    // FOR DERECHA A IZQUIERDA
-    for(int x = width - 1; x >= 0; x--){
-      for(int y = 0; y < height; y++){
-        if(imgPixels[(size_t)y * width + x].a != 0){
-          arr[3] = true;
-          arr2[3] = x;
-          break;
-        }
+  }
+  if(arr[2]) break;
+  }
+  // FOR DERECHA A IZQUIERDA
+  for(int x = width - 1; x >= 0; x--){
+    for(int y = 0; y < height; y++){
+      if(imgPixels[(size_t)y * width + x].a > 0){
+        arr[3] = true;
+        arr2[3] = x;
+        break;
       }
-      if(arr[3]) break;
     }
+    if(arr[3]) break;
   }
   
   for(int y = arr2[0]; y < arr2[1]; y++){
@@ -84,7 +84,7 @@ void DrawImage::cutImage(){
 void DrawImage::scaleImage() {
   if (scaleX < 0.05f) scaleX = 0.05f;
   if (scaleY < 0.05f) scaleY = 0.05f;
-  int oldWidth  = baseW;
+  int oldWidth = baseW;
   int oldHeight = baseH;
   int scaledWidth  = std::max(1, (int)std::round(baseW * scaleX));
   int scaledHeight = std::max(1, (int)std::round(baseH * scaleY));

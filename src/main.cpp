@@ -7,8 +7,8 @@ int posX = 200;
 int posY = 200;
 int velocity = 12;
 int reverseImage = 0;
-float scaledImageX = 1.0f;
-float scaledImageY = 1.0f;
+float scaledImageX = 0.5f;
+float scaledImageY = 0.5f;
 float degrees = 0.0f;
 bool boxMargin = false;
 
