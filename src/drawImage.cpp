@@ -1,14 +1,11 @@
 #include "drawImage.h"
 
-DrawImage::DrawImage(const Image& img, const Color* pixels, Framebuffer& fb, int& posX, int& posY, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees)
+DrawImage::DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees)
   : degrees(degrees),
     scaleX(scaleX),
     scaleY(scaleY),
     bMargin(bMargin),
     n1(rev),
-    posX(posX),
-    posY(posY),
-    fb(fb),
     width(img.width),
     height(img.height)
 {
@@ -205,7 +202,7 @@ void DrawImage::buildMatrix(){
   //56,560 1.0f hidrante
 }
 
-void DrawImage::showImage(){
+void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
   int x = posX;
   int y = posY;
   int indexReal = 0;
@@ -235,111 +232,10 @@ void DrawImage::showImage(){
   }
 }
 
-
 /*
   CREAR MI PROPIA FUNCION MEMCPY
   ESTABLECER LIMITES DE DIBUJO FUERA DEL TAMAÑO DEL FRAMEBUFFER
   MIRROR/REVERSE IMAGE
   SOLUCIONAR ROTATE IMAGE
   OPTIMIZAR
-*/
-
-/*
-void DrawImage::buildMatrix(){
-  // BOLEANOS
-  bool bool2 = true;
-  bool bool3 = true;
-  // ENTEROS
-  int n1 = 0;
-  int n2 = 0;
-  // RELEASE MEMORY
-  numbers.clear();
-  realPixels.clear();
-  fakePixels.clear();
-  smallImage.clear();
-  // FOR ANIDADO
-  for(int y = 0; y < newHeight; y++){
-    for(int x = 0; x < newWidth; x++){
-      if(imgPixels[(size_t)y * newWidth + x].a != 0){
-        smallImage.push_back(imgPixels[(size_t)y * newWidth + x]);
-        if(n2 > 0){
-          vectorFakePixels.push_back(n2);
-          n2 = 0;
-        }
-        if(bool2){
-          bool2 = false;
-          bool3 = true;
-          vectorNumbers.push_back(1);
-        }
-        n1++;
-      }else{
-        if(n1 > 0){
-          vectorRealPixels.push_back(n1);
-          n1 = 0;
-        }
-        if(bool3){
-          bool3 = false;
-          bool2 = true;
-          vectorNumbers.push_back(0);
-        }
-        n2++;
-      }
-    }
-    if(n1 > 0){
-      vectorRealPixels.push_back(n1);
-      n1 = 0;
-    }
-    if(n2 > 0){
-      vectorFakePixels.push_back(n2);
-      n2 = 0;
-    }
-    if(!vectorRealPixels.empty() && vectorRealPixels[0] == newWidth){
-      vectorFakePixels.push_back(0);
-    }
-    if(!vectorFakePixels.empty() && vectorFakePixels[0] == newWidth){
-      vectorRealPixels.push_back(0);
-    }
-    bool2 = true;
-    bool3 = true;
-    // WHERE ARE REAL PIXELS
-    numbers.push_back(vectorNumbers);
-    vectorNumbers.clear();
-    vectorNumbers.shrink_to_fit();
-    // Real Pixels
-    realPixels.push_back(vectorRealPixels);
-    vectorRealPixels.clear();
-    vectorRealPixels.shrink_to_fit();
-    // Fake Pixels
-    fakePixels.push_back(vectorFakePixels);
-    vectorFakePixels.clear();
-    vectorFakePixels.shrink_to_fit();
-  }
-}
-
-void DrawImage::showImage(){
-  int indexNumbers = 0;
-  int indexFakePixels = 0;
-  int indexSmallImage = 0;
-  int indexRealPixels = 0;
-  for(int y = posY; y < newHeight + posY; y++){
-    for(int x = posX; x < newWidth + posX; x++){
-      int iy = y - posY;
-      if(numbers[iy][indexNumbers] == 1){ // CAMBIOS DE 1 A 0
-        int count = realPixels[iy][indexRealPixels];
-        memcpy(&fb.pix[(size_t)y * fb.w + x], &smallImage[(size_t)indexSmallImage], (size_t)count * sizeof(Color));
-        indexSmallImage += count;
-        x += count - 1;
-        indexNumbers++;
-        indexRealPixels++;
-      }else{ // CAMBIOS DE 1 A 0
-        x += fakePixels[iy][indexFakePixels] - 1;
-        indexNumbers++;
-        indexFakePixels++;
-      }
-    }
-    indexNumbers = 0;
-    indexFakePixels = 0;
-    indexRealPixels = 0;
-  }
-}
 */

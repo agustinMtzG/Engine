@@ -9,10 +9,7 @@
 using namespace std;
 
 struct DrawImage {
-  Framebuffer& fb;
   bool& bMargin;
-  int& posX;
-  int& posY;
   int posY1 = 0, posY2 = 0, posX1 = 0, posX2 = 0;
   int width = 0, height = 0, newWidth = 0, newHeight = 0;
   int oldWidth = 0, oldHeight = 0;
@@ -32,20 +29,10 @@ struct DrawImage {
   vector<uint16_t> Fake;
   vector<bool> Group;
 
-  /*
-  // CUTIMAGE CHANGES VECTORS
-  vector<vector<int>> numbers;
-  vector<vector<int>> realPixels;
-  vector<vector<int>> fakePixels;
-  vector<int> vectorNumbers;
-  vector<int> vectorRealPixels;
-  vector<int> vectorFakePixels;
-  */
-
-  DrawImage(const Image& img, const Color* pixels, Framebuffer& fb, int& posX, int& posY, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees);
+  DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees);
   void cutImage();
   void scaleImage();
   void buildMatrix();
-  void showImage();
+  void showImage(Framebuffer& fb, int posX, int posY) const;
   void rotate();
 };

@@ -1,11 +1,11 @@
-#include "drawImage.h"
+#include "renderQueue.h"
 // FRAMEBUFFER SIZE
 static constexpr int windowWidth = 1800;
 static constexpr int windowHeight = 900;
 // IMAGE VARIABLES
 int posX = 200;
 int posY = 200;
-int velocity = 12;
+int velocity = 6;
 int reverseImage = 0;
 float scaledImageX = 0.5f;
 float scaledImageY = 0.5f;
@@ -42,7 +42,11 @@ int main(){
         framebufferImg.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
     Texture2D tex = LoadTextureFromImage(framebufferImg);
 
-    DrawImage image(Img, imgPixels, framebuffer, posX, posY, reverseImage, boxMargin, scaledImageX, scaledImageY, degrees);
+    DrawImage image(Img, imgPixels, reverseImage, boxMargin, scaledImageX, scaledImageY, degrees);
+
+    // STRUCT RENDERER
+    Renderer renderer;
+    //renderer.renderQueue.reserve(20000);
     
     while(!WindowShouldClose()){
         if (degrees > 360.0f) degrees = 0.0f;
@@ -76,7 +80,10 @@ int main(){
         }
         // DRAWING IMAGE IN SCREEN
         framebuffer.clear(Color{50, 50, 50, 255});
-        image.showImage();
+        renderer.beginFrame();
+        renderer.submit(image, posX, posY, 0);
+        renderer.flush(framebuffer);
+        // RAYLIB DRAW FUNCTIONS
         UpdateTexture(tex, framebuffer.pix.data());
         BeginDrawing();
         ClearBackground(Color{50, 50, 50, 255});
