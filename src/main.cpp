@@ -5,7 +5,7 @@ static constexpr int windowHeight = 900;
 // IMAGE VARIABLES
 int posX = 200;
 int posY = 200;
-int velocity = 6;
+int velocity = 3;
 int reverseImage = 0;
 float scaledImageX = 0.5f;
 float scaledImageY = 0.5f;
@@ -19,17 +19,11 @@ int main(){
     // STRUCT FRAMEBUFFER
     Framebuffer framebuffer(windowWidth, windowHeight);
     // LOAD IMAGE
-    Image Img = LoadImage("assets/hidrante.png");
-    if(Img.data == nullptr){
-        TraceLog(LOG_ERROR, "ERROR AL CARGAR Img");
-        CloseWindow();
-        return 1;
-    }
+    Image Img = LoadImage("assets/layer3.png");
     // LOAD IMAGE PIXELS
     Color* imgPixels = LoadImageColors(Img);
-    if(!imgPixels){
-        TraceLog(LOG_ERROR, "ERROR AL CARGAR LOS PIXELES DE Img");
-        UnloadImage(Img);
+    if(Img.data == nullptr){
+        TraceLog(LOG_ERROR, "ERROR AL CARGAR IMG");
         CloseWindow();
         return 1;
     }
@@ -42,7 +36,7 @@ int main(){
         framebufferImg.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
     Texture2D tex = LoadTextureFromImage(framebufferImg);
 
-    DrawImage image(Img, imgPixels, reverseImage, boxMargin, scaledImageX, scaledImageY, degrees);
+    DrawImage image(Img, imgPixels, reverseImage, boxMargin, scaledImageX, scaledImageY);
 
     // STRUCT RENDERER
     Renderer renderer;
@@ -52,7 +46,7 @@ int main(){
         if (degrees > 360.0f) degrees = 0.0f;
         if (IsKeyDown(KEY_M) || IsKeyDown(KEY_N)) {
             degrees += IsKeyDown(KEY_M) ? 1.0f : -1.0f;
-            //image.rotate();
+            image.rotate(degrees);
         }
         // IMAGE MOVEMENT
         if (IsKeyDown(KEY_D)) posX += velocity;

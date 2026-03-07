@@ -1,16 +1,16 @@
 #include "renderQueue.h"
 
 void Renderer::beginFrame() {
-    renderQueue.clear();
+  renderQueue.clear();
 }
 
 void Renderer::submit(const DrawImage& image, int x, int y, int layer) {
-    RenderCommand cmd;
-    cmd.image = &image;
-    cmd.x = x;
-    cmd.y = y;
-    cmd.layer = layer;
-    renderQueue.push_back(cmd);
+  RenderCommand cmd;
+  cmd.image = &image;
+  cmd.x = x;
+  cmd.y = y;
+  cmd.layer = layer;
+  renderQueue.push_back(cmd);
 }
 
 void Renderer::flush(Framebuffer& fb) {

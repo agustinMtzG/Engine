@@ -1,14 +1,23 @@
 #pragma once
-#include "raylib.h"
 #include "framebuffer.h"
-#include <vector>
 #include <cmath>
 #include <iostream>
-#include <algorithm>
 #include <cstdint>
 using namespace std;
 
+struct Pixel {
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
+  unsigned char a;
+  float x;
+  float y;
+};
+
 struct DrawImage {
+
+  vector<Pixel> pixels;
+
   bool& bMargin;
   int posY1 = 0, posY2 = 0, posX1 = 0, posX2 = 0;
   int width = 0, height = 0, newWidth = 0, newHeight = 0;
@@ -17,7 +26,6 @@ struct DrawImage {
   int& n1;
   float& scaleX;
   float& scaleY;
-  float& degrees;
   vector<Color> newImage2;
   vector<Color> imgPixels;
   vector<Color> newImage;
@@ -29,10 +37,10 @@ struct DrawImage {
   vector<uint16_t> Fake;
   vector<bool> Group;
 
-  DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees);
+  DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY);
   void cutImage();
   void scaleImage();
   void buildMatrix();
   void showImage(Framebuffer& fb, int posX, int posY) const;
-  void rotate();
+  void rotate(float degrees);
 };

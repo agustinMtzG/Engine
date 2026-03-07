@@ -1,8 +1,7 @@
 #include "drawImage.h"
 
-DrawImage::DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY, float& degrees)
-  : degrees(degrees),
-    scaleX(scaleX),
+DrawImage::DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY)
+  : scaleX(scaleX),
     scaleY(scaleY),
     bMargin(bMargin),
     n1(rev),
@@ -13,6 +12,7 @@ DrawImage::DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMar
   cutImage();
   scaleImage();
   buildMatrix();
+  rotate(0.0f);
 }
 
 void DrawImage::cutImage(){
@@ -36,7 +36,7 @@ void DrawImage::cutImage(){
     for(int x = 0; x < width; x++){
       if(imgPixels[(size_t)y * width + x].a > 0){
         arr[1] = true;
-        arr2[1] = y;
+        arr2[1] = y + 1;
         break;
       }
     }
@@ -58,7 +58,7 @@ void DrawImage::cutImage(){
     for(int y = 0; y < height; y++){
       if(imgPixels[(size_t)y * width + x].a > 0){
         arr[3] = true;
-        arr2[3] = x;
+        arr2[3] = x + 1;
         break;
       }
     }
@@ -135,29 +135,75 @@ void DrawImage::scaleImage() {
   height = newHeight;
 }
 
-void DrawImage::rotate(){
-  float rad = degrees * 3.14159265f / 180.0f;
-  float cosA = cos(rad);
-  float sinA = sin(rad);
-  int srcW = newWidth;
-  int srcH = newHeight;
-  float cx = (srcW - 1) * 0.5f;
-  float cy = (srcH - 1) * 0.5f;
-  vector<Color> rotated(srcW * srcH, Color{0,0,0,0});
-  for(int y = 0; y < srcH; y++){
-    for(int x = 0; x < srcW; x++){
-      float dx = x - cx;
-      float dy = y - cy;
-      float srcX = cosA * dx + sinA * dy + cx;
-      float srcy = -sinA * dx + cosA * dy + cy;
-      int ix = (int)floor(srcX);
-      int iy = (int)floor(srcy);
-      if(ix >= 0 && ix < srcW && iy >= 0 && iy < srcH){
-        rotated[(size_t)y * (size_t)srcW + (size_t)x] = newImage2[(size_t)iy * (size_t)srcW + (size_t)ix];
+void DrawImage::rotate(float degrees) {
+  constexpr float Pi = 3.14159265358979323846f;
+  pixels.clear();
+  pixels.reserve((size_t)newWidth * (size_t)newHeight);
+  float centerX = (float)newWidth / 2.0f;
+  float centerY = (float)newHeight / 2.0f;
+  float cateto1 = 0.0f;
+  float cateto2 = 0.0f;
+  float hipotenusa = 0.0f;
+  float rotation = degrees;
+  float angle = (rotation * Pi) / 180.0f;
+  int a = 0;
+  for(int y = 0; y < newHeight; y++){
+    for(int x = 0; x < newWidth; x++){
+      if(centerX >= x) cateto1 = centerX - x; else cateto1 = x - centerX;
+      if(centerY >= y) cateto2 = centerY - y; else cateto2 = y - centerY;
+      hipotenusa = sqrt(cateto1 * cateto1 + cateto2 * cateto2);
+      Pixel pix;
+      pix.r = imgPixels[(size_t)y * newWidth + x].r;
+      pix.g = imgPixels[(size_t)y * newWidth + x].g;
+      pix.b = imgPixels[(size_t)y * newWidth + x].b;
+      pix.a = imgPixels[(size_t)y * newWidth + x].a;
+      float angle3 = 0.0f;
+      float angle2 = 0.0f;
+      float rotation2 = 0.0f;
+      if(x >= centerX && y < centerY){
+        // 1
+        rotation2 = ((asin(cateto1 / hipotenusa) * (180 / Pi)));
+        angle2 = (rotation2 * Pi) / 180;
+        angle3 = angle + angle2;
+      }else if(x >= centerX && y >= centerY){
+        // 2
+        rotation2 = 180 - ((asin(cateto1 / hipotenusa) * (180 / Pi)));
+        angle2 = (rotation2 * Pi) / 180;
+        angle3 = angle + angle2;
+      }else if(x < centerX && y >= centerY){
+        // 3
+        rotation2 = 180 + ((asin(cateto1 / hipotenusa) * (180 / Pi)));
+        angle2 = (rotation2 * Pi) / 180;
+        angle3 = angle + angle2;
+      }else if(x < centerX && y < centerY){
+        // 4
+        rotation2 = 360 - ((asin(cateto1 / hipotenusa) * (180 / Pi)));
+        angle2 = (rotation2 * Pi) / 180;
+        angle3 = angle + angle2;
       }
+      float maxAngle = (360.0f * Pi) / 180;
+      if(angle3 > maxAngle){
+        angle3 = angle3 - maxAngle;
+      }else if(angle3 < 0){
+        angle3 = maxAngle + angle3;
+      }
+      pix.x = ceil(centerX + sin(angle3) * hipotenusa);
+      pix.y = ceil(centerY - cos(angle3) * hipotenusa);
+      if(cateto1 == 0){
+        pix.x = centerX;
+        pix.y = centerY;
+      }
+      if(x == 0 && y == 0){
+        //cout << ceil(pix.y) << endl;
+      }
+      //pix.y = floor(pix.y);
+      pixels.push_back(pix);
     }
   }
-  newImage = move(rotated);
+  sort(pixels.begin(), pixels.end(), [](const Pixel& a, const Pixel& b){
+    if(a.y != b.y) return a.y < b.y;
+    return a.x < b.x;
+  });
 }
 
 void DrawImage::buildMatrix(){
@@ -203,6 +249,33 @@ void DrawImage::buildMatrix(){
 }
 
 void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
+  for(int i = 0; i < pixels.size(); i++){
+    Color c;
+    c.r = pixels[i].r;
+    c.g = pixels[i].g;
+    c.b = pixels[i].b;
+    c.a = pixels[i].a;
+    fb.pix[(size_t)(posY + pixels[i].y) * fb.w + (posX + pixels[i].x)] = c;
+  }
+}
+
+/*
+void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
+  for(int y = posY; y < newHeight + posY; y++){
+    for(int x = posX; x < newWidth + posX; x++){
+      int ix = x - posX;
+      int iy = y - posY;
+      if(bMargin && (ix == 0 || iy == 0 || ix == newWidth - 1 || iy == newHeight - 1)){
+        fb.pix[(size_t)y * fb.w + x] = Color{255, 255, 255, 255};
+      }else{
+        fb.pix[(size_t)y * fb.w + x] = imgPixels[(size_t)iy * newWidth + ix];
+      }
+    }
+  }
+}
+*/
+/*
+void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
   int x = posX;
   int y = posY;
   int indexReal = 0;
@@ -231,11 +304,46 @@ void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
     }
   }
 }
+*/
+
 
 /*
-  CREAR MI PROPIA FUNCION MEMCPY
+
+  MEJORAR BUILDMATRIX
   ESTABLECER LIMITES DE DIBUJO FUERA DEL TAMAÑO DEL FRAMEBUFFER
   MIRROR/REVERSE IMAGE
+
   SOLUCIONAR ROTATE IMAGE
+
+  VER FUNCIONES DE RAYLIB
+
   OPTIMIZAR
+
+*/
+
+/*
+void DrawImage::rotate(){
+  float rad = degrees * 3.14159265f / 180.0f;
+  float cosA = cos(rad);
+  float sinA = sin(rad);
+  int srcW = newWidth;
+  int srcH = newHeight;
+  float cx = (srcW - 1) * 0.5f;
+  float cy = (srcH - 1) * 0.5f;
+  vector<Color> rotated(srcW * srcH, Color{0,0,0,0});
+  for(int y = 0; y < srcH; y++){
+    for(int x = 0; x < srcW; x++){
+      float dx = x - cx;
+      float dy = y - cy;
+      float srcX = cosA * dx + sinA * dy + cx;
+      float srcy = -sinA * dx + cosA * dy + cy;
+      int ix = (int)floor(srcX);
+      int iy = (int)floor(srcy);
+      if(ix >= 0 && ix < srcW && iy >= 0 && iy < srcH){
+        rotated[(size_t)y * (size_t)srcW + (size_t)x] = newImage2[(size_t)iy * (size_t)srcW + (size_t)ix];
+      }
+    }
+  }
+  newImage = move(rotated);
+}
 */
