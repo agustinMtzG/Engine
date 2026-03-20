@@ -2,7 +2,7 @@
 #include "drawImage.h"
 
 struct RenderCommand {
-    const DrawImage* image;
+    const RotatingImagePipeline* image;  // RotatingImagePipeline
     int x;
     int y;
     int layer;
@@ -11,7 +11,7 @@ struct RenderCommand {
 class Renderer {
 public:
     void beginFrame();
-    void submit(const DrawImage& image, int x, int y, int layer);
+    void submit(const RotatingImagePipeline& image, int x, int y, int layer); // RotatingImagePipeline
     void flush(Framebuffer& fb);
 private:
   std::vector<RenderCommand> renderQueue;

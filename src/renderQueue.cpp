@@ -4,7 +4,7 @@ void Renderer::beginFrame() {
   renderQueue.clear();
 }
 
-void Renderer::submit(const DrawImage& image, int x, int y, int layer) {
+void Renderer::submit(const RotatingImagePipeline& image, int x, int y, int layer) { // RotatingImagePipeline
   RenderCommand cmd;
   cmd.image = &image;
   cmd.x = x;

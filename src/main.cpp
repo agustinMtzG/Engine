@@ -7,8 +7,8 @@ int posX = 200;
 int posY = 200;
 int velocity = 3;
 int reverseImage = 0;
-float scaledImageX = 0.5f;
-float scaledImageY = 0.5f;
+float scaledImageX = 0.3f;
+float scaledImageY = 0.3f;
 float degrees = 0.0f;
 bool boxMargin = false;
 
@@ -19,7 +19,7 @@ int main(){
     // STRUCT FRAMEBUFFER
     Framebuffer framebuffer(windowWidth, windowHeight);
     // LOAD IMAGE
-    Image Img = LoadImage("assets/layer3.png");
+    Image Img = LoadImage("assets/hidrante.png");
     // LOAD IMAGE PIXELS
     Color* imgPixels = LoadImageColors(Img);
     if(Img.data == nullptr){
@@ -36,7 +36,7 @@ int main(){
         framebufferImg.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
     Texture2D tex = LoadTextureFromImage(framebufferImg);
 
-    DrawImage image(Img, imgPixels, reverseImage, boxMargin, scaledImageX, scaledImageY);
+    RotatingImagePipeline image(Img, imgPixels, scaledImageX, scaledImageY);
 
     // STRUCT RENDERER
     Renderer renderer;
@@ -45,7 +45,7 @@ int main(){
     while(!WindowShouldClose()){
         if (degrees > 360.0f) degrees = 0.0f;
         if (IsKeyDown(KEY_M) || IsKeyDown(KEY_N)) {
-            degrees += IsKeyDown(KEY_M) ? 1.0f : -1.0f;
+            degrees += IsKeyDown(KEY_M) ? 4.0f : -4.0f;
             image.rotate(degrees);
         }
         // IMAGE MOVEMENT
@@ -58,12 +58,14 @@ int main(){
             scaledImageX += 0.01f;
             scaledImageY += 0.01f;
             image.scaleImage();
-            image.buildMatrix();
+            //image.imageData(false);
+            image.rotate(degrees);
         } else if (IsKeyDown(KEY_I)){
             scaledImageX -= 0.01f;
             scaledImageY -= 0.01f;
             image.scaleImage();
-            image.buildMatrix();
+            //image.imageData(false);
+            image.rotate(degrees);
         }
         // TOGGLE IMAGE MARGIN
         if (IsKeyPressed(KEY_SPACE)) boxMargin = !boxMargin;
