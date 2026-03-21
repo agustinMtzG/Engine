@@ -7,8 +7,8 @@ int posX = 200;
 int posY = 200;
 int velocity = 3;
 int reverseImage = 0;
-float scaledImageX = 0.3f;
-float scaledImageY = 0.3f;
+float scaledImageX = 0.2f;
+float scaledImageY = 0.2f;
 float degrees = 0.0f;
 bool boxMargin = false;
 
@@ -20,10 +20,24 @@ int main(){
     Framebuffer framebuffer(windowWidth, windowHeight);
     // LOAD IMAGE
     Image Img = LoadImage("assets/hidrante.png");
+    Image Img2 = LoadImage("assets/layer3.png");
+    Image Img3 = LoadImage("assets/dragon.png");
     // LOAD IMAGE PIXELS
     Color* imgPixels = LoadImageColors(Img);
+    Color* imgPixels2 = LoadImageColors(Img2);
+    Color* imgPixels3 = LoadImageColors(Img3);
     if(Img.data == nullptr){
         TraceLog(LOG_ERROR, "ERROR AL CARGAR IMG");
+        CloseWindow();
+        return 1;
+    }
+    if(Img2.data == nullptr){
+        TraceLog(LOG_ERROR, "ERROR AL CARGAR IMG2");
+        CloseWindow();
+        return 1;
+    }
+    if(Img3.data == nullptr){
+        TraceLog(LOG_ERROR, "ERROR AL CARGAR IMG3");
         CloseWindow();
         return 1;
     }
@@ -37,6 +51,8 @@ int main(){
     Texture2D tex = LoadTextureFromImage(framebufferImg);
 
     RotatingImagePipeline image(Img, imgPixels, scaledImageX, scaledImageY);
+    RotatingImagePipeline image2(Img2, imgPixels2, scaledImageX, scaledImageY);
+    RotatingImagePipeline image3(Img3, imgPixels3, scaledImageX, scaledImageY);
 
     // STRUCT RENDERER
     Renderer renderer;
@@ -77,7 +93,9 @@ int main(){
         // DRAWING IMAGE IN SCREEN
         framebuffer.clear(Color{50, 50, 50, 255});
         renderer.beginFrame();
-        renderer.submit(image, posX, posY, 0);
+        renderer.submit(image, posX, posY, 2);
+        renderer.submit(image2, 300, 300, 0);
+        renderer.submit(image3, 400, 200, 1);
         renderer.flush(framebuffer);
         // RAYLIB DRAW FUNCTIONS
         UpdateTexture(tex, framebuffer.pix.data());

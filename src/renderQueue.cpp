@@ -4,7 +4,7 @@ void Renderer::beginFrame() {
   renderQueue.clear();
 }
 
-void Renderer::submit(const RotatingImagePipeline& image, int x, int y, int layer) { // RotatingImagePipeline
+void Renderer::submit(RotatingImagePipeline& image, int x, int y, int layer) { // RotatingImagePipeline
   RenderCommand cmd;
   cmd.image = &image;
   cmd.x = x;
@@ -18,7 +18,7 @@ void Renderer::flush(Framebuffer& fb) {
     [](const RenderCommand& a, const RenderCommand& b) {
       return a.layer < b.layer;
   });
-  for(const RenderCommand& cmd : renderQueue){
+  for(RenderCommand& cmd : renderQueue){
     if (!cmd.image) continue;
     cmd.image->showImage(fb, cmd.x, cmd.y);
   }

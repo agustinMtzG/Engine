@@ -330,10 +330,9 @@ void RotatingImagePipeline::scaleImage(){
   newSize = sqrt((0 - width) * (0 - width) + (0 - height) * (0 - height));
   newSize = (newSize % 2 == 0) ? newSize : newSize + 1;
   imgPixels2.clear();
-  imgPixels2.resize((size_t)newSize * newSize);
 }
 
-void RotatingImagePipeline::whenToRotate(float degrees, int x, int y, int index){
+void RotatingImagePipeline::whenToRotate(float degrees, int x, int y){
   float angle = (degrees * Pi) / 180.0f;
   float sinA = sin(angle);
   float cosA = cos(angle);
@@ -346,34 +345,75 @@ void RotatingImagePipeline::whenToRotate(float degrees, int x, int y, int index)
   int XX = round(srcX);
   int YY = round(srcY);
   size_t index2 = (size_t)YY * width + XX;
-  int n1 = index;
-  if(XX >= 0 && YY >= 0 && XX < width && YY < height){
-    imgPixels2[n1] = imgPixels[index2];
+  if(XX >= 0 && YY >= 0 && XX < width && YY < height && imgPixels[index2].a > 0){
+    imgPixels2.push_back(imgPixels[index2]);
+    b1 = true;
+    indexReal++;
+    if(b2){
+      b2 = false;
+      Group.push_back(1);
+      if(indexFake > 0){
+        Fake.push_back(indexFake);
+        indexFake = 0;
+      }
+    }
   }else{
-    imgPixels2[n1] = Color{0, 0, 0, 0};
-  }
-}
-
-void RotatingImagePipeline::rotate(float degrees){
-  int n1 = -1;
-  for(int y = cy2 - (newSize / 2); y < cy2 + (newSize / 2); y++){
-    for(int x = cx2 - (newSize / 2); x < cx2 + (newSize / 2); x++){
-      n1++;
-      whenToRotate(degrees, x, y, n1);
+    b2 = true;
+    indexFake++;
+    if(b1){
+      b1 = false;
+      Group.push_back(0);
+      if(indexReal > 0){
+        Real.push_back(indexReal);
+        indexReal = 0;
+      }
     }
   }
 }
 
-void RotatingImagePipeline::showImage(Framebuffer& fb, int posX, int posY) const {
-  size_t totalBytes = newSize * sizeof(Color);
-  for(int y = posY; y < newSize + posY; y++){
-    if(y < 0) continue; // ERROR
-    if(y >= fb.h) break;
-    int yi = y - posY;
-    size_t index = (size_t)y * fb.w + posX;
-    size_t index2 = (size_t)yi * newSize;
-    memcpy(&fb.pix[index], &imgPixels2[index2], totalBytes);
+void RotatingImagePipeline::rotate(float degrees){
+  Real.clear();
+  Fake.clear();
+  Group.clear();
+  imgPixels2.clear();
+  for(int y = cy2 - (newSize / 2); y < cy2 + (newSize / 2); y++){
+    for(int x = cx2 - (newSize / 2); x < cx2 + (newSize / 2); x++){
+      whenToRotate(degrees, x, y);
+    }
+    b1 = true;
+    b2 = true;
+    if(indexReal > 0){
+      Real.push_back(indexReal);
+      indexReal = 0;
+    }
+    if(indexFake > 0){
+      Fake.push_back(indexFake);
+      indexFake = 0;
+    }
   }
+}
+
+void RotatingImagePipeline::showImage(Framebuffer& fb, int posX, int posY){
+  int indexGroup = 0;
+  int indexPixels = 0;
+  for(int y = posY; y < newSize + posY; y++){
+    for(int x = posX; x < newSize + posX; x++){
+      if(Group[indexGroup] == 0){
+        x += Fake[indexFake] - 1;
+        indexFake++;
+        indexGroup++;
+      }else{
+        int count = Real[indexReal];
+        memcpy(&fb.pix[(size_t)y * fb.w + x], &imgPixels2[(size_t)indexPixels], (size_t)count * sizeof(Color));
+        x += count - 1;
+        indexPixels += count;
+        indexReal++;
+        indexGroup++;
+      }
+    }
+  }
+  indexReal = 0;
+  indexFake = 0;
 }
 
 /*
