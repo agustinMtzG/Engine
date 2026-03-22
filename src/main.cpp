@@ -1,25 +1,26 @@
-#include "renderQueue.h"
+#include "engine.h"
 // FRAMEBUFFER SIZE
 static constexpr int windowWidth = 1800;
 static constexpr int windowHeight = 900;
 // IMAGE VARIABLES
 int posX = 200;
 int posY = 200;
-int velocity = 3;
+int velocity = 8;
 int reverseImage = 0;
 float scaledImageX = 0.2f;
 float scaledImageY = 0.2f;
 float degrees = 0.0f;
 bool boxMargin = false;
+Color c{0, 0, 0, 0};
 
 int main(){
     // INICIALIZE WINDOW AND FRAMES PER SECOND
     InitWindow(windowWidth, windowHeight, "Cheese");
     SetTargetFPS(60);
     // STRUCT FRAMEBUFFER
-    Framebuffer framebuffer(windowWidth, windowHeight);
+    Framebuffer framebuffer(static_cast<size_t>(windowWidth), static_cast<size_t>(windowHeight), c);
     // LOAD IMAGE
-    Image Img = LoadImage("assets/hidrante.png");
+    Image Img = LoadImage("assets/layer3.png");
     Image Img2 = LoadImage("assets/layer3.png");
     Image Img3 = LoadImage("assets/dragon.png");
     // LOAD IMAGE PIXELS
@@ -51,12 +52,8 @@ int main(){
     Texture2D tex = LoadTextureFromImage(framebufferImg);
 
     RotatingImagePipeline image(Img, imgPixels, scaledImageX, scaledImageY);
-    RotatingImagePipeline image2(Img2, imgPixels2, scaledImageX, scaledImageY);
-    RotatingImagePipeline image3(Img3, imgPixels3, scaledImageX, scaledImageY);
-
-    // STRUCT RENDERER
-    Renderer renderer;
-    //renderer.renderQueue.reserve(20000);
+    ImageRenderPipeline image2(Img2, imgPixels2, scaledImageX, scaledImageY);
+    ImageRenderPipeline image3(Img3, imgPixels3, scaledImageX, scaledImageY);
     
     while(!WindowShouldClose()){
         if (degrees > 360.0f) degrees = 0.0f;
@@ -74,13 +71,13 @@ int main(){
             scaledImageX += 0.01f;
             scaledImageY += 0.01f;
             image.scaleImage();
-            //image.imageData(false);
+            //image.imageData();
             image.rotate(degrees);
         } else if (IsKeyDown(KEY_I)){
             scaledImageX -= 0.01f;
             scaledImageY -= 0.01f;
             image.scaleImage();
-            //image.imageData(false);
+            //image.imageData();
             image.rotate(degrees);
         }
         // TOGGLE IMAGE MARGIN
@@ -91,12 +88,10 @@ int main(){
             reverseImage = (reverseImage + 4) % 4;
         }
         // DRAWING IMAGE IN SCREEN
-        framebuffer.clear(Color{50, 50, 50, 255});
-        renderer.beginFrame();
-        renderer.submit(image, posX, posY, 2);
-        renderer.submit(image2, 300, 300, 0);
-        renderer.submit(image3, 400, 200, 1);
-        renderer.flush(framebuffer);
+        framebuffer.clear(c);
+        image.showImage(framebuffer, posX, posY);
+        image2.showImage(framebuffer, 300, 500);
+        image3.showImage(framebuffer, 500, 500);
         // RAYLIB DRAW FUNCTIONS
         UpdateTexture(tex, framebuffer.pix.data());
         BeginDrawing();
@@ -111,33 +106,3 @@ int main(){
     CloseWindow();
     return 0;
 }
-
-/*
-
-// COMPILAR PROYECTO
-g++ src/main.cpp src/framebuffer.cpp src/drawImage.cpp -I src -o app.exe -lraylib -lopengl32 -lgdi32 -lwinmm
-
-// FUNCIONES Y STRUCTS QUE EVENTUALMENTE TENDREMOS QUE CAMBIAR POR PROPIAS
-TraceLog()
-
-InitWindow()
-CloseWindow()
-SetTargetFPS()
-struct Image
-struct Color
-struct Texture2D
-LoadImage()
-LoadImageColors()
-LoadTextureFromImage()
-IsKeyDown()
-IsKeyPressed()
-UpdateTexture()
-BeginDrawing()
-ClearBackground()
-DrawTexture()
-EndDrawing();
-UnloadTexture()
-UnloadImageColors()
-UnloadImage()
-
-*/

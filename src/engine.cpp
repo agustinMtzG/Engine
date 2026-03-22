@@ -1,4 +1,21 @@
-#include "drawImage.h"
+#include "engine.h"
+
+// FRAMEBUFFER
+
+Framebuffer::Framebuffer(size_t width, size_t height, Color c)
+    : w(width),
+      h(height),
+      pix(width * height, c)
+    {}
+
+void Framebuffer::clear(Color c){
+    std::fill(pix.begin(), pix.end(), c);
+}
+
+void Framebuffer::setPixel(size_t x, size_t y, Color c){
+    if(x < 0 || y < 0 || x >= w || y >= h) return;
+    pix[y * w + x] = c;
+}
 
 // IMAGERENDERPIPELINE
 
@@ -12,7 +29,7 @@ ImageRenderPipeline::ImageRenderPipeline(const Image& img, const Color* pix, flo
   imgPixels.assign(pix, pix + (size_t)width * (size_t)height);
   cutImage();
   scaleImage();
-  imageData(false);
+  imageData();
 }
 
 void ImageRenderPipeline::cutImage(){
@@ -128,72 +145,108 @@ void ImageRenderPipeline::scaleImage(){
   imgPixels = std::move(scaled);
   width = scaledWidth;
   height = scaledHeight;
+  imgPixels2.clear();
 }
 
-void ImageRenderPipeline::imageData(bool b1){
-  uint16_t n1 = 0;
-  size_t index = 0;
+void ImageRenderPipeline::imageData(){
+  b1 = true;
+  b2 = true;
   Real.clear();
-  smallImage.clear();
-  if(b1){
-    for(uint16_t x = 0; x < width; x++){
-      for(uint16_t y = 0; y < height; y++){
-        index = (size_t)(y * width + x);
-          if(imgPixels[index].a > 0){
+  Fake.clear();
+  Group.clear();
+  howManyGroups.clear();
+  imgPixels2.clear();
+  for(int y = 0; y < height; y++){
+    for(int x = 0; x < width; x++){
+      size_t index = (size_t)y * width + x;
+      if(imgPixels[index].a != 0){
+        imgPixels2.push_back(imgPixels[index]);
+        indexReal++;
+        b2 = true;
+        if(b1){
+          b1 = false;
+          Group.push_back(1);
           n1++;
-          Color c = imgPixels[index];
-          Pixel p;
-          p.r = c.r; p.g = c.g; p.b = c.b; p.a = c.a;
-          p.x = x; p.y = y;
-          smallImage.push_back(p);
-        }else{
-          if(n1 > 0){
-            Real.push_back(n1);
-            n1 = 0;
+          if(indexFake > 0){
+            Fake.push_back(indexFake);
+            indexFake = 0;
           }
         }
-      }
-      if(n1 > 0){
-        Real.push_back(n1);
-        n1 = 0;
+      }else{
+        indexFake++;
+        b1 = true;
+        if(b2){
+          b2 = false;
+          Group.push_back(0);
+          n1++;
+          if(indexReal > 0){
+            Real.push_back(indexReal);
+            indexReal = 0;
+          }
+        }
       }
     }
-  }else{
-    for(uint16_t y = 0; y < height; y++){
-      for(uint16_t x = 0; x < width; x++){
-        index = (size_t)(y * width + x);
-          if(imgPixels[index].a > 0){
-          n1++;
-          Color c = imgPixels[index];
-          Pixel p;
-          p.r = c.r; p.g = c.g; p.b = c.b; p.a = c.a;
-          p.x = x; p.y = y;
-          smallImage.push_back(p);
-        }else{
-          if(n1 > 0){
-            Real.push_back(n1);
-            n1 = 0;
-          }
-        }
-      }
-      if(n1 > 0){
-        Real.push_back(n1);
-        n1 = 0;
-      }
+    b1 = true;
+    b2 = true;
+    if(n1 > 0){
+      howManyGroups.push_back(n1);
+      n1 = 0;
+    }
+    if(indexReal > 0){
+      Real.push_back(indexReal);
+      indexReal = 0;
+    }
+    if(indexFake > 0){
+      Fake.push_back(indexFake);
+      indexFake = 0;
     }
   }
-  pixels = smallImage;
 }
 
-void ImageRenderPipeline::showImage(Framebuffer& fb, int posX, int posY) const {
-  for(int i = 0; i < pixels.size(); i++){
-    Color c;
-    c.r = pixels[i].r;
-    c.g = pixels[i].g;
-    c.b = pixels[i].b;
-    c.a = pixels[i].a;
-    fb.pix[(size_t)(posY + pixels[i].y) * fb.w + (posX + pixels[i].x)] = c;
+void ImageRenderPipeline::showImage(Framebuffer& fb, int posX, int posY) {
+  int indexGroup = 0;
+  int indexPixels = 0;
+  if(posY >= fb.h || posY <= (height * -1) || posX >= fb.w || posX <= (width * -1)) return;
+  for(int y = posY; y < height + posY; y++){
+    if(y >= fb.h) break;
+    if(y < 0){
+      for(int i = 0; i < (y * -1); i++){
+        for(int j = 0; j < howManyGroups[i]; j++){
+          if(Group[indexGroup] == 0){
+            indexFake++;
+          }else{
+            indexPixels += Real[indexReal];
+            indexReal++;
+          }
+          indexGroup++;
+        }
+      }
+      y = 0;
+    }
+    for(int x = posX; x < width + posX; x++){
+      if(Group[indexGroup] == 0){
+        x += Fake[indexFake] - 1;
+        indexFake++;
+        indexGroup++;
+      }else{
+        int v1 = x > 0 && (x + Real[indexReal]) >= fb.w ? (x + Real[indexReal]) - fb.w : 0;
+        int v2 = 0;
+        if(x < 0){
+          v2 = x * -1;
+          v1 = v2;
+          x = 0;
+        }
+        int count = Real[indexReal];
+        if(count - v1 > 0) memcpy(&fb.pix[(size_t)y * fb.w + x], &imgPixels2[(size_t)indexPixels + v2], (size_t)(count - v1) * sizeof(Color));
+        x += count - 1 - v2;
+        indexPixels += count;
+        indexReal++;
+        indexGroup++;
+      }
+    }
   }
+  indexReal = 0;
+  indexFake = 0;
 }
 
 // ROTATINGIMAGEPIPELINE
@@ -353,6 +406,7 @@ void RotatingImagePipeline::whenToRotate(float degrees, int x, int y){
       b2 = false;
       Group.push_back(1);
       if(indexFake > 0){
+        n1++;
         Fake.push_back(indexFake);
         indexFake = 0;
       }
@@ -364,6 +418,7 @@ void RotatingImagePipeline::whenToRotate(float degrees, int x, int y){
       b1 = false;
       Group.push_back(0);
       if(indexReal > 0){
+        n1++;
         Real.push_back(indexReal);
         indexReal = 0;
       }
@@ -375,6 +430,7 @@ void RotatingImagePipeline::rotate(float degrees){
   Real.clear();
   Fake.clear();
   Group.clear();
+  howManyGroups.clear();
   imgPixels2.clear();
   for(int y = cy2 - (newSize / 2); y < cy2 + (newSize / 2); y++){
     for(int x = cx2 - (newSize / 2); x < cx2 + (newSize / 2); x++){
@@ -383,29 +439,56 @@ void RotatingImagePipeline::rotate(float degrees){
     b1 = true;
     b2 = true;
     if(indexReal > 0){
+      n1++;
       Real.push_back(indexReal);
       indexReal = 0;
     }
     if(indexFake > 0){
+      n1++;
       Fake.push_back(indexFake);
       indexFake = 0;
     }
+    howManyGroups.push_back(n1);
+    n1 = 0;
   }
 }
 
 void RotatingImagePipeline::showImage(Framebuffer& fb, int posX, int posY){
   int indexGroup = 0;
   int indexPixels = 0;
+  if(posY >= fb.h || posY <= (newSize * -1) || posX >= fb.w || posX <= (newSize * -1)) return;
   for(int y = posY; y < newSize + posY; y++){
+    if(y >= fb.h) break;
+    if(y < 0){
+      for(int i = 0; i < (y * -1); i++){
+        for(int j = 0; j < howManyGroups[i]; j++){
+          if(Group[indexGroup] == 0){
+            indexFake++;
+          }else{
+            indexPixels += Real[indexReal];
+            indexReal++;
+          }
+          indexGroup++;
+        }
+      }
+      y = 0;
+    }
     for(int x = posX; x < newSize + posX; x++){
       if(Group[indexGroup] == 0){
         x += Fake[indexFake] - 1;
         indexFake++;
         indexGroup++;
       }else{
+        int v1 = x > 0 && (x + Real[indexReal]) >= fb.w ? (x + Real[indexReal]) - fb.w : 0;
+        int v2 = 0;
+        if(x < 0){
+          v2 = x * -1;
+          v1 = v2;
+          x = 0;
+        }
         int count = Real[indexReal];
-        memcpy(&fb.pix[(size_t)y * fb.w + x], &imgPixels2[(size_t)indexPixels], (size_t)count * sizeof(Color));
-        x += count - 1;
+        if(count - v1 > 0) memcpy(&fb.pix[(size_t)y * fb.w + x], &imgPixels2[(size_t)indexPixels + v2], (size_t)(count - v1) * sizeof(Color));
+        x += count - 1 - v2;
         indexPixels += count;
         indexReal++;
         indexGroup++;
@@ -417,7 +500,8 @@ void RotatingImagePipeline::showImage(Framebuffer& fb, int posX, int posY){
 }
 
 /*
-0. Optimizar cutImage, scaleImage y showImage de ambos structs
+-1. IMAGEDATA Y SHOWIMAGE HACER UNA SOLA FUNCION Y LLAMARLA EN LOS STRUCTS
+0. Optimizar cutImage, scaleImage, showImage de ambos structs
 1. Como le vamos a hacer con renderQueue ahora hay dos tipos de drawImage
 2. De los dos structs nuevos (cutImage, scaleImage) son las mismas como heredar
 3. Separar los archivos
@@ -428,4 +512,10 @@ void RotatingImagePipeline::showImage(Framebuffer& fb, int posX, int posY){
 8. funcion de transparencia
 9. Estudiar y documentar
 10. Comenzar videojuego
+
+1.- RENDERQUEUE dos tipos de datos
+2.- Mejorar main.cpp
+3.- Luminosidad
+4.- Transparencia
+5.- Comenzar videojuego
 */

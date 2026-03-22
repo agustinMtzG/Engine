@@ -1,3 +1,50 @@
+/*
+#pragma once
+#include "drawImage.h"
+
+struct RenderCommand {
+    RotatingImagePipeline* image;  // RotatingImagePipeline
+    int x;
+    int y;
+    int layer;
+};
+
+class Renderer {
+public:
+    void beginFrame();
+    void submit(RotatingImagePipeline& image, int x, int y, int layer); // RotatingImagePipeline
+    void flush(Framebuffer& fb);
+private:
+    std::vector<RenderCommand> renderQueue;
+};
+
+#include "renderQueue.h"
+
+void Renderer::beginFrame() {
+  renderQueue.clear();
+}
+
+void Renderer::submit(RotatingImagePipeline& image, int x, int y, int layer) { // RotatingImagePipeline
+  RenderCommand cmd;
+  cmd.image = &image;
+  cmd.x = x;
+  cmd.y = y;
+  cmd.layer = layer;
+  renderQueue.push_back(cmd);
+}
+
+void Renderer::flush(Framebuffer& fb) {
+  std::sort(renderQueue.begin(), renderQueue.end(),
+    [](const RenderCommand& a, const RenderCommand& b) {
+      return a.layer < b.layer;
+  });
+  for(RenderCommand& cmd : renderQueue){
+    if (!cmd.image) continue;
+    cmd.image->showImage(fb, cmd.x, cmd.y);
+  }
+}
+*/
+/*
 #include "drawImage.h"
 
 DrawImage::DrawImage(const Image& img, const Color* pixels, int& rev, bool& bMargin, float& scaleX, float& scaleY)
@@ -244,7 +291,7 @@ void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
     fb.pix[(size_t)(posY + pixels[i].y) * fb.w + (posX + pixels[i].x)] = c;
   }
 }
-
+*/
 /*
 void DrawImage::showImage(Framebuffer& fb, int posX, int posY) const {
   for(int y = posY; y < newHeight + posY; y++){
@@ -391,4 +438,33 @@ void DrawImage::whenToRotate(float degrees){
     //rotate(degrees, smallImage[i], pixels[i]);
   }
 }
+*/
+/*
+
+// COMPILAR PROYECTO
+g++ src/main.cpp src/framebuffer.cpp src/drawImage.cpp -I src -o app.exe -lraylib -lopengl32 -lgdi32 -lwinmm
+
+// FUNCIONES Y STRUCTS QUE EVENTUALMENTE TENDREMOS QUE CAMBIAR POR PROPIAS
+TraceLog()
+
+InitWindow()
+CloseWindow()
+SetTargetFPS()
+struct Image
+struct Color
+struct Texture2D
+LoadImage()
+LoadImageColors()
+LoadTextureFromImage()
+IsKeyDown()
+IsKeyPressed()
+UpdateTexture()
+BeginDrawing()
+ClearBackground()
+DrawTexture()
+EndDrawing();
+UnloadTexture()
+UnloadImageColors()
+UnloadImage()
+
 */
